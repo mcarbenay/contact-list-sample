@@ -16,6 +16,9 @@ module ListeContacts {
 
         private static listName: string = "exemple de liste";
 
+        /**
+         * Lance une création / mise à jour de la liste de contacts
+         */
         public static MettreAJour() {
             // on obtient une ref. sur le store en mode "écriture"
             Windows.ApplicationModel.Contacts.ContactManager.requestStoreAsync(
@@ -41,13 +44,16 @@ module ListeContacts {
             });
         }
 
+        /**
+         * Méthode de nettoyage : supprime la liste de contacts
+         */
         public static Supprimer() {
             // on obtient une ref. sur le store en mode "écriture"
             Windows.ApplicationModel.Contacts.ContactManager.requestStoreAsync(
                 Windows.ApplicationModel.Contacts.ContactStoreAccessType.appContactsReadWrite
             ).done(function (store) {
-                // on énumère les listes pour vérifier si la notre existe
-                // déjà : si oui, on l'update sinon on la créé
+                // on cherche la liste et si elle est trouvé
+                // on la supprime
                 store.findContactListsAsync().done(function (lists) {
                     var laListe : Windows.ApplicationModel.Contacts.ContactList = null;
                     for (var i = 0; i < lists.length; i++) {
@@ -65,11 +71,17 @@ module ListeContacts {
         }
 
 
+        /**
+         * Crée la liste de contact
+         * @param store le datastore pour les contacts
+         */
         private static createContactList(store : Windows.ApplicationModel.Contacts.ContactStore) {
             store.createContactListAsync(ListeContactSample.listName).done(function (laListe) {
+                // Les autres applications n'auront pas le droit de modifier
                 laListe.otherAppReadAccess = Windows.ApplicationModel.Contacts.ContactListOtherAppReadAccess.full;
                 laListe.otherAppWriteAccess = Windows.ApplicationModel.Contacts.ContactListOtherAppWriteAccess.none;
                 laListe.saveAsync().done(function () {
+                    // après avoir créé la liste, on lance un refresh
                     ListeContactSample.refreshContactList(laListe);
                 });
             });
@@ -96,18 +108,16 @@ module ListeContacts {
                 email: "contact2@monautredomaine.com"
             });
 
-            //ret.push({
-            //    remoteId: "E862CB70-6250-40D7-956D-300D1E6BA134",
-            //    name: "Contact 3",
-            //    email: "contact3@encoreunautredomain.com"
-            //});
-
             if (success != null) {
                 success(ret);
             }
 
         }
 
+        /**
+         * Met à jour la liste de contacts
+         * @param laListe la liste à mettre à jour
+         */
         private static refreshContactList(laListe: Windows.ApplicationModel.Contacts.ContactList) {
             ListeContactSample.getAllFromBackEnd(function (ctcs) {
                 for (var i = 0; i < ctcs.length; i++) {
@@ -131,6 +141,12 @@ module ListeContacts {
                 });
             });
         }
+
+        /**
+         * Met à jour un contact depuis sa version "back-end"
+         * @param laListe la liste à mettre à jour
+         * @param leContact le contact "back-end"
+         */
         private static refreshContact(laListe: Windows.ApplicationModel.Contacts.ContactList,
             leContact: ContactBackend) {
             // obtient le contact depuis son id "distant"

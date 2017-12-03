@@ -1,4 +1,4 @@
-﻿/// <reference path="../scripts/typings/jquery/jquery.d.ts" />
+/// <reference path="../scripts/typings/jquery/jquery.d.ts" />
 var ListeContacts;
 (function (ListeContacts) {
     /**
@@ -13,6 +13,9 @@ var ListeContacts;
     var ListeContactSample = (function () {
         function ListeContactSample() {
         }
+        /**
+         * Lance une création / mise à jour de la liste de contacts
+         */
         ListeContactSample.MettreAJour = function () {
             // on obtient une ref. sur le store en mode "écriture"
             Windows.ApplicationModel.Contacts.ContactManager.requestStoreAsync(Windows.ApplicationModel.Contacts.ContactStoreAccessType.appContactsReadWrite).done(function (store) {
@@ -34,11 +37,14 @@ var ListeContacts;
                 });
             });
         };
+        /**
+         * Méthode de nettoyage : supprime la liste de contacts
+         */
         ListeContactSample.Supprimer = function () {
             // on obtient une ref. sur le store en mode "écriture"
             Windows.ApplicationModel.Contacts.ContactManager.requestStoreAsync(Windows.ApplicationModel.Contacts.ContactStoreAccessType.appContactsReadWrite).done(function (store) {
-                // on énumère les listes pour vérifier si la notre existe
-                // déjà : si oui, on l'update sinon on la créé
+                // on cherche la liste et si elle est trouvé
+                // on la supprime
                 store.findContactListsAsync().done(function (lists) {
                     var laListe = null;
                     for (var i = 0; i < lists.length; i++) {
@@ -53,11 +59,17 @@ var ListeContacts;
                 });
             });
         };
+        /**
+         * Crée la liste de contact
+         * @param store le datastore pour les contacts
+         */
         ListeContactSample.createContactList = function (store) {
             store.createContactListAsync(ListeContactSample.listName).done(function (laListe) {
+                // Les autres applications n'auront pas le droit de modifier
                 laListe.otherAppReadAccess = Windows.ApplicationModel.Contacts.ContactListOtherAppReadAccess.full;
                 laListe.otherAppWriteAccess = Windows.ApplicationModel.Contacts.ContactListOtherAppWriteAccess.none;
                 laListe.saveAsync().done(function () {
+                    // après avoir créé la liste, on lance un refresh
                     ListeContactSample.refreshContactList(laListe);
                 });
             });
@@ -79,15 +91,14 @@ var ListeContacts;
                 name: "Contact 2",
                 email: "contact2@monautredomaine.com"
             });
-            //ret.push({
-            //    remoteId: "E862CB70-6250-40D7-956D-300D1E6BA134",
-            //    name: "Contact 3",
-            //    email: "contact3@encoreunautredomain.com"
-            //});
             if (success != null) {
                 success(ret);
             }
         };
+        /**
+         * Met à jour la liste de contacts
+         * @param laListe la liste à mettre à jour
+         */
         ListeContactSample.refreshContactList = function (laListe) {
             ListeContactSample.getAllFromBackEnd(function (ctcs) {
                 for (var i = 0; i < ctcs.length; i++) {
@@ -110,6 +121,11 @@ var ListeContacts;
                 });
             });
         };
+        /**
+         * Met à jour un contact depuis sa version "back-end"
+         * @param laListe la liste à mettre à jour
+         * @param leContact le contact "back-end"
+         */
         ListeContactSample.refreshContact = function (laListe, leContact) {
             // obtient le contact depuis son id "distant"
             laListe.getContactFromRemoteIdAsync(leContact.remoteId).done(function (ctc) {
@@ -143,4 +159,4 @@ $(document).ready(function () {
     $("#btnMakeList").click(function () { return ListeContacts.ListeContactSample.MettreAJour(); });
     $("#btnDeleteList").click(function () { return ListeContacts.ListeContactSample.Supprimer(); });
 });
-//# sourceMappingURL=c:/temp/App3/App3/js/main.js.map
+//# sourceMappingURL=main.js.map
