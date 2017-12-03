@@ -41,6 +41,30 @@ module ListeContacts {
             });
         }
 
+        public static Supprimer() {
+            // on obtient une ref. sur le store en mode "écriture"
+            Windows.ApplicationModel.Contacts.ContactManager.requestStoreAsync(
+                Windows.ApplicationModel.Contacts.ContactStoreAccessType.appContactsReadWrite
+            ).done(function (store) {
+                // on énumère les listes pour vérifier si la notre existe
+                // déjà : si oui, on l'update sinon on la créé
+                store.findContactListsAsync().done(function (lists) {
+                    var laListe : Windows.ApplicationModel.Contacts.ContactList = null;
+                    for (var i = 0; i < lists.length; i++) {
+                        if (lists[i].displayName == ListeContactSample.listName) {
+                            laListe = lists[i];
+                        }
+                    }
+                    if (laListe != null) {
+                        laListe.deleteAsync().done(function () {
+
+                        });
+                    }
+                });
+            });
+        }
+
+
         private static createContactList(store : Windows.ApplicationModel.Contacts.ContactStore) {
             store.createContactListAsync(ListeContactSample.listName).done(function (laListe) {
                 laListe.otherAppReadAccess = Windows.ApplicationModel.Contacts.ContactListOtherAppReadAccess.full;
@@ -116,4 +140,5 @@ module ListeContacts {
 
 $(document).ready(() => {
     $("#btnMakeList").click(() => ListeContacts.ListeContactSample.MettreAJour());
+    $("#btnDeleteList").click(() => ListeContacts.ListeContactSample.Supprimer());
 });
