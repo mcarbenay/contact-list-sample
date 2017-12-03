@@ -62,13 +62,6 @@ var ListeContacts;
                 });
             });
         };
-        ListeContactSample.refreshContactList = function (laListe) {
-            ListeContactSample.getAllFromBackEnd(function (ctcs) {
-                for (var i = 0; i < ctcs.length; i++) {
-                    ListeContactSample.refreshContact(laListe, ctcs[i]);
-                }
-            });
-        };
         /**
          * Obtient les données du back-end
          * pour l'exemple 'obtient les données en dur' :)
@@ -86,12 +79,41 @@ var ListeContacts;
                 name: "Contact 2",
                 email: "contact2@monautredomaine.com"
             });
+            //ret.push({
+            //    remoteId: "E862CB70-6250-40D7-956D-300D1E6BA134",
+            //    name: "Contact 3",
+            //    email: "contact3@encoreunautredomain.com"
+            //});
             if (success != null) {
                 success(ret);
             }
         };
+        ListeContactSample.refreshContactList = function (laListe) {
+            ListeContactSample.getAllFromBackEnd(function (ctcs) {
+                for (var i = 0; i < ctcs.length; i++) {
+                    ListeContactSample.refreshContact(laListe, ctcs[i]);
+                }
+                // premier jet de la suppression
+                laListe.getContactReader().readBatchAsync().done(function (batch) {
+                    for (var i = 0; i < batch.contacts.length; i++) {
+                        var found = false;
+                        for (var j = 0; j < ctcs.length; j++) {
+                            if (ctcs[j].remoteId == batch.contacts[i].remoteId) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            laListe.deleteContactAsync(batch.contacts[i]);
+                        }
+                    }
+                });
+            });
+        };
         ListeContactSample.refreshContact = function (laListe, leContact) {
+            // obtient le contact depuis son id "distant"
             laListe.getContactFromRemoteIdAsync(leContact.remoteId).done(function (ctc) {
+                // si il n'existe pas, il faut le créer
                 if (ctc == null) {
                     ctc = new Windows.ApplicationModel.Contacts.Contact();
                     ctc.remoteId = leContact.remoteId;
@@ -99,6 +121,7 @@ var ListeContacts;
                 else {
                     ctc.emails.clear();
                 }
+                // puis mettre à jour ses données
                 ctc.name = leContact.name;
                 if (leContact.email != null && leContact.email != "") {
                     var email = new Windows.ApplicationModel.Contacts.ContactEmail();
@@ -106,6 +129,7 @@ var ListeContacts;
                     email.kind = Windows.ApplicationModel.Contacts.ContactEmailKind.work;
                     ctc.emails.push(email);
                 }
+                // et finalement l'enregistrer
                 laListe.saveContactAsync(ctc).done(function () {
                 });
             });
